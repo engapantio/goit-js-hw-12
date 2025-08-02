@@ -1,0 +1,46 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+ul,
+li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: currentColor;
+  text-decoration: none;
+  /* height: 100%;*/
+}
+
+button {
+  cursor: pointer;
+  border-style: none;
+  border-color: none;
+  outline: none;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+}
+
+img {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+}
+
+input,
+textarea {
+  outline: none;
+}
