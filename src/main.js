@@ -4,12 +4,14 @@ import getImagesByQuery from './js/pixabay-api';
 import * as rendered from './js/render-functions';
 
 const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
-const searchForm = document.querySelector('.form');
-const loadMoreBtn = document.querySelector('.js-load-more');
+const searchForm = document.querySelector('form.form');
+const loadMoreBtn = document.querySelector('button.js-load-more');
 let meaning = '';
 let page = 2;
+let totalPages = NaN;
 
-searchForm.addEventListener('submit', e => {
+//initiating search, fixing query value to global var
+searchForm.addEventListener('submit', async e => {
   e.preventDefault();
   meaning = searchForm.elements['search-text'].value.trim();
   if (meaning === '') {
@@ -25,15 +27,18 @@ searchForm.addEventListener('submit', e => {
     return;
   }
 
+  rendered.hideLoadMoreButton();
   rendered.clearGallery();
   rendered.showLoader();
 
   getImagesByQuery(meaning)
     .then(data => {
+      totalPages = Math.ceil(data.totalHits / 15);
       rendered.hideLoader();
+
       searchForm.elements['search-text'].value = '';
       if (data.hits.length === 0) {
-        iziToast.error({
+        return iziToast.error({
           backgroundColor: '#ef4040',
           class: 'error-message',
           message:
@@ -44,16 +49,23 @@ searchForm.addEventListener('submit', e => {
           position: 'topRight',
           iconUrl: closeSVGLink,
         });
-
-        return;
       }
 
       rendered.createGallery(data.hits);
-      if (
-        document.querySelector('ul.gallery').innerHTML &&
-        Math.ceil(data.totalHits / 15) !== page
-      ) {
+
+      if (document.querySelector('ul.gallery').innerHTML && totalPages > 1) {
         rendered.showLoadMoreButton();
+      } else if (totalPages === 1) {
+        iziToast.error({
+          backgroundColor: '#ef4040',
+          class: 'error-message',
+          message: "We're sorry, but you've reached the end of search results.",
+          messageColor: '#fff',
+          messageSize: '16px',
+          messageLineHeight: 1.5,
+          position: 'bottomLeft',
+          iconUrl: closeSVGLink,
+        });
       }
     })
     .catch(error => {
@@ -61,20 +73,34 @@ searchForm.addEventListener('submit', e => {
     });
 });
 
-loadMoreBtn.addEventListener('click', () => {
-  rendered.showLoadMoreButton();
+//working with Load More button (pages 2 and following);
+loadMoreBtn.addEventListener('click', async () => {
+  rendered.hideLoadMoreButton();
   rendered.showLoader();
+
   getImagesByQuery(meaning, page)
     .then(data => {
+      totalPages = Math.ceil(data.totalHits / 15);
       rendered.hideLoader();
-      console.log(data.totalHits, page);
-      if (Math.ceil(data.totalHits / 15) < page) {
+      rendered.createGallery(data.hits);
+      if (totalPages < page) {
+        rendered.hideLoadMoreButton();
         page = 2;
         meaning = '';
-        rendered.hideLoadMoreButton();
+        totalPages = NaN;
+        iziToast.error({
+          backgroundColor: '#ef4040',
+          class: 'error-message',
+          message: "We're sorry, but you've reached the end of search results.",
+          messageColor: '#fff',
+          messageSize: '16px',
+          messageLineHeight: 1.5,
+          position: 'bottomLeft',
+          iconUrl: closeSVGLink,
+        });
+      } else {
+        rendered.showLoadMoreButton();
       }
-
-      rendered.createGallery(data.hits);
     })
     .catch(err => {
       console.log(err);
@@ -121,10 +147,9 @@ We're sorry, but you've reached the end of search results.
 Зверни увагу, що кінець колекції може бути і на 1й сторінці, і на подальших.
 
 
-Прокручування сторінки
-
-
-
-Зроби плавне прокручування сторінки після запиту і відтворення кожної наступної групи зображень. Для цього отримай у коді висоту однієї карточки галереї, використовуючи функцію getBoundingClientRect. Після цього використовуй метод window.scrollBy для прокрутки сторінки на дві висоти карточки галереї.
+Поки в галерії нема зображень, кнопка повинна бути прихована.
+Після того як у галереї з'являються зображення, кнопка з'являється в інтерфейсі під галереєю.
+При повторному сабміті форми кнопка спочатку ховається, а після отримання результатів запиту знову відображається за потреби.
+Перенеси індикатор завантаження під кнопку завантаження додаткових зображень.
 
 */

@@ -30,7 +30,7 @@ export function createGallery(images) {
     )
     .join('');
 
-  document.querySelector('ul.gallery').innerHTML = markup;
+  document.querySelector('ul.gallery').innerHTML += markup;
 
   const galleryItemLarge = new SimpleLightbox('.gallery a', {
     animationSpeed: 350,
@@ -41,6 +41,14 @@ export function createGallery(images) {
   });
 
   galleryItemLarge.refresh();
+
+  window.scrollBy({
+    top:
+      2 *
+      document.querySelector('li.gallery-item').getBoundingClientRect().height,
+    left: 0,
+    behavior: 'smooth',
+  });
 }
 
 export function clearGallery() {
@@ -94,12 +102,13 @@ hideLoadMoreButton(). Ця функція нічого не приймає, по
 
 
 
-Поки в галерії нема зображень, кнопка повинна бути прихована.
-Після того як у галереї з'являються зображення, кнопка з'являється в інтерфейсі під галереєю.
-При повторному сабміті форми кнопка спочатку ховається, а після отримання результатів запиту знову відображається за потреби.
-Перенеси індикатор завантаження під кнопку завантаження додаткових зображень.
 
 
+Прокручування сторінки
+
+
+
+Зроби плавне прокручування сторінки після запиту і відтворення кожної наступної групи зображень. Для цього отримай у коді висоту однієї карточки галереї, використовуючи функцію getBoundingClientRect. Після цього використовуй метод window.scrollBy для прокрутки сторінки на дві висоти карточки галереї.
 
 
 

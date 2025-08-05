@@ -12,6 +12,7 @@ export default async function getImagesByQuery(query, page = 1) {
       safesearch: true,
     },
   });
+
   return details.data;
 }
 
