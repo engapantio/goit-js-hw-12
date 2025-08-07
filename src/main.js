@@ -1,5 +1,6 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
+import 'modern-normalize/modern-normalize.css';
 import getImagesByQuery from './js/pixabay-api';
 import * as rendered from './js/render-functions';
 
@@ -9,13 +10,14 @@ const loadMoreBtn = document.querySelector('button.js-load-more');
 let meaning = '';
 let page = 2;
 let totalPages = NaN;
+let total = NaN;
 
-//initiating search, fixing query value to global var
+// initiate search, fixing query value to global var
 searchForm.addEventListener('submit', async e => {
   e.preventDefault();
   meaning = searchForm.elements['search-text'].value.trim();
   if (meaning === '') {
-    iziToast.warning({
+    return iziToast.warning({
       backgroundColor: 'orange',
       message:
         'Sorry, there is nothing provided here to look for. Please try again!',
@@ -24,14 +26,13 @@ searchForm.addEventListener('submit', async e => {
       messageLineHeight: 1.5,
       position: 'topLeft',
     });
-    return;
   }
 
   rendered.hideLoadMoreButton();
   rendered.clearGallery();
   rendered.showLoader();
 
-  getImagesByQuery(meaning)
+  await getImagesByQuery(meaning)
     .then(data => {
       totalPages = Math.ceil(data.totalHits / 15);
       rendered.hideLoader();
@@ -63,7 +64,7 @@ searchForm.addEventListener('submit', async e => {
           messageColor: '#fff',
           messageSize: '16px',
           messageLineHeight: 1.5,
-          position: 'bottomLeft',
+          position: 'bottomRight',
           iconUrl: closeSVGLink,
         });
       }
@@ -78,13 +79,15 @@ loadMoreBtn.addEventListener('click', async () => {
   rendered.hideLoadMoreButton();
   rendered.showLoader();
 
-  getImagesByQuery(meaning, page)
+  await getImagesByQuery(meaning, page)
     .then(data => {
+      console.log(Math.ceil(data.totalHits / 15) === totalPages);
       totalPages = Math.ceil(data.totalHits / 15);
+      console.log(totalPages);
       rendered.hideLoader();
-      rendered.createGallery(data.hits);
-      if (totalPages < page) {
-        rendered.hideLoadMoreButton();
+      rendered.hideLoadMoreButton();
+
+      if (totalPages <= page) {
         page = 2;
         meaning = '';
         totalPages = NaN;
@@ -95,20 +98,20 @@ loadMoreBtn.addEventListener('click', async () => {
           messageColor: '#fff',
           messageSize: '16px',
           messageLineHeight: 1.5,
-          position: 'bottomLeft',
+          position: 'bottomRight',
           iconUrl: closeSVGLink,
         });
       } else {
         rendered.showLoadMoreButton();
+        page++;
       }
+      rendered.createGallery(data.hits);
+      console.log(data.total, total);
+      if (data.total !== total) page = 2;
     })
     .catch(err => {
       console.log(err);
     });
-
-  if (meaning) {
-    page++;
-  }
 });
 
 /*
