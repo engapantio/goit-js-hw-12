@@ -8,7 +8,7 @@ const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
 const searchForm = document.querySelector('form.form');
 const loadMoreBtn = document.querySelector('button.js-load-more');
 let meaning = '';
-let page = 2;
+let page = 1;
 let totalPages = NaN;
 let total = NaN;
 
@@ -72,6 +72,7 @@ searchForm.addEventListener('submit', async e => {
     .catch(error => {
       console.error(error);
     });
+    page = 2;
 });
 
 //working with Load More button (pages 2 and following);
@@ -81,14 +82,12 @@ loadMoreBtn.addEventListener('click', async () => {
 
   await getImagesByQuery(meaning, page)
     .then(data => {
-      console.log(Math.ceil(data.totalHits / 15) === totalPages);
       totalPages = Math.ceil(data.totalHits / 15);
-      console.log(totalPages);
       rendered.hideLoader();
       rendered.hideLoadMoreButton();
 
       if (totalPages <= page) {
-        page = 2;
+        page = 1;
         meaning = '';
         totalPages = NaN;
         iziToast.error({
@@ -106,8 +105,6 @@ loadMoreBtn.addEventListener('click', async () => {
         page++;
       }
       rendered.createGallery(data.hits);
-      console.log(data.total, total);
-      if (data.total !== total) page = 2;
     })
     .catch(err => {
       console.log(err);
