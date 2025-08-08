@@ -32,7 +32,8 @@ searchForm.addEventListener('submit', async e => {
   rendered.clearGallery();
   rendered.showLoader();
 
-  await getImagesByQuery(meaning)
+  try {
+    await getImagesByQuery(meaning)
     .then(data => {
       totalPages = Math.ceil(data.totalHits / 15);
       rendered.hideLoader();
@@ -69,9 +70,9 @@ searchForm.addEventListener('submit', async e => {
         });
       }
     })
-    .catch(error => {
+  } catch(error){
       console.error(error);
-    });
+    };
     page = 2;
 });
 
@@ -80,7 +81,8 @@ loadMoreBtn.addEventListener('click', async () => {
   rendered.hideLoadMoreButton();
   rendered.showLoader();
 
-  await getImagesByQuery(meaning, page)
+  try{
+    await getImagesByQuery(meaning, page)
     .then(data => {
       totalPages = Math.ceil(data.totalHits / 15);
       rendered.hideLoader();
@@ -106,9 +108,9 @@ loadMoreBtn.addEventListener('click', async () => {
       }
       rendered.createGallery(data.hits);
     })
-    .catch(err => {
+  } catch(err){
       console.log(err);
-    });
+    };
 });
 
 /*
