@@ -7,15 +7,17 @@ import * as rendered from './js/render-functions';
 const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
 const searchForm = document.querySelector('form.form');
 const loadMoreBtn = document.querySelector('button.js-load-more');
-let meaning = '';
+const perPage = 15;
 let page = 1;
 let totalPages = NaN;
-let total = NaN;
+let meaning = '';
+let repeater;
 
-// initiate search, fixing query value to global var
+// initiate search, fixing query value to global var(s)
 searchForm.addEventListener('submit', async e => {
   e.preventDefault();
   meaning = searchForm.elements['search-text'].value.trim();
+  if (meaning !== '') repeater = meaning.slice();
   if (meaning === '') {
     return iziToast.warning({
       backgroundColor: 'orange',
@@ -33,12 +35,11 @@ searchForm.addEventListener('submit', async e => {
   rendered.showLoader();
 
   try {
-    await getImagesByQuery(meaning)
-    .then(data => {
-      totalPages = Math.ceil(data.totalHits / 15);
+    await getImagesByQuery(meaning).then(data => {
+      totalPages = Math.ceil(data.totalHits / perPage);
       rendered.hideLoader();
-
       searchForm.elements['search-text'].value = '';
+
       if (data.hits.length === 0) {
         return iziToast.error({
           backgroundColor: '#ef4040',
@@ -69,11 +70,16 @@ searchForm.addEventListener('submit', async e => {
           iconUrl: closeSVGLink,
         });
       }
-    })
-  } catch(error){
-      console.error(error);
-    };
-    page = 2;
+    });
+  } catch (error) {
+    rendered.hideLoader();
+    iziToast.error({
+      backgroundColor: '#380505ff',
+      message: `${error}`,
+      messageColor: '#fff',
+    });
+  }
+  page = 2;
 });
 
 //working with Load More button (pages 2 and following);
@@ -81,10 +87,9 @@ loadMoreBtn.addEventListener('click', async () => {
   rendered.hideLoadMoreButton();
   rendered.showLoader();
 
-  try{
-    await getImagesByQuery(meaning, page)
-    .then(data => {
-      totalPages = Math.ceil(data.totalHits / 15);
+  try {
+    await getImagesByQuery(repeater, page).then(data => {
+      totalPages = Math.ceil(data.totalHits / perPage);
       rendered.hideLoader();
       rendered.hideLoadMoreButton();
 
@@ -107,10 +112,15 @@ loadMoreBtn.addEventListener('click', async () => {
         page++;
       }
       rendered.createGallery(data.hits);
-    })
-  } catch(err){
-      console.log(err);
-    };
+    });
+  } catch (error) {
+    rendered.hideLoader();
+    iziToast.error({
+      backgroundColor: '#380505ff',
+      message: `${error}`,
+      messageColor: '#fff',
+    });
+  }
 });
 
 /*
