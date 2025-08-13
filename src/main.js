@@ -8,17 +8,17 @@ const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
 const searchForm = document.querySelector('form.form');
 const loadMoreBtn = document.querySelector('button.js-load-more');
 const perPage = 15;
-let page = 1;
 let totalPages = NaN;
-let meaning = '';
-let repeater;
+let queryText = '';
+let page;
+let loadMoreQueryText;
 
 // initiate search, fixing query value to global var(s)
 searchForm.addEventListener('submit', async e => {
   e.preventDefault();
-  meaning = searchForm.elements['search-text'].value.trim();
-  if (meaning !== '') repeater = meaning.slice();
-  if (meaning === '') {
+  queryText = searchForm.elements['search-text'].value.trim();
+  if (queryText !== '') loadMoreQueryText = queryText.slice();
+  if (queryText === '') {
     return iziToast.warning({
       backgroundColor: 'orange',
       message:
@@ -33,14 +33,15 @@ searchForm.addEventListener('submit', async e => {
   rendered.hideLoadMoreButton();
   rendered.clearGallery();
   rendered.showLoader();
+  page = 1;
 
   try {
-    await getImagesByQuery(meaning).then(data => {
-      totalPages = Math.ceil(data.totalHits / perPage);
+    getImagesByQuery(queryText, page).then(queriedImages => {
+      totalPages = Math.ceil(queriedImages.totalHits / perPage);
       rendered.hideLoader();
       searchForm.elements['search-text'].value = '';
 
-      if (data.hits.length === 0) {
+      if (queriedImages.hits.length === 0) {
         return iziToast.error({
           backgroundColor: '#ef4040',
           class: 'error-message',
@@ -54,7 +55,7 @@ searchForm.addEventListener('submit', async e => {
         });
       }
 
-      rendered.createGallery(data.hits);
+      rendered.createGallery(queriedImages.hits);
 
       if (document.querySelector('ul.gallery').innerHTML && totalPages > 1) {
         rendered.showLoadMoreButton();
@@ -79,23 +80,22 @@ searchForm.addEventListener('submit', async e => {
       messageColor: '#fff',
     });
   }
-  page = 2;
 });
 
 //working with Load More button (pages 2 and following);
 loadMoreBtn.addEventListener('click', async () => {
+  page++;
   rendered.hideLoadMoreButton();
   rendered.showLoader();
 
   try {
-    await getImagesByQuery(repeater, page).then(data => {
-      totalPages = Math.ceil(data.totalHits / perPage);
+    getImagesByQuery(loadMoreQueryText, page).then(moreImagesLoaded => {
+      totalPages = Math.ceil(moreImagesLoaded.totalHits / perPage);
       rendered.hideLoader();
       rendered.hideLoadMoreButton();
 
       if (totalPages <= page) {
-        page = 1;
-        meaning = '';
+        queryText = '';
         totalPages = NaN;
         iziToast.error({
           backgroundColor: '#ef4040',
@@ -109,9 +109,16 @@ loadMoreBtn.addEventListener('click', async () => {
         });
       } else {
         rendered.showLoadMoreButton();
-        page++;
       }
-      rendered.createGallery(data.hits);
+      rendered.createGallery(moreImagesLoaded.hits);
+      window.scrollBy({
+        top:
+          2 *
+          document.querySelector('li.gallery-item').getBoundingClientRect()
+            .height,
+        left: 0,
+        behavior: 'smooth',
+      });
     });
   } catch (error) {
     rendered.hideLoader();

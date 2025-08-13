@@ -1,14 +1,14 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-export function createGallery(images) {
-  const galleryItemLarge = new SimpleLightbox('.gallery a', {
-    animationSpeed: 350,
-    captionsData: 'alt',
-    captionDelay: 150,
-    widthRatio: 0.9,
-  });
+const galleryItemLarge = new SimpleLightbox('.gallery a', {
+  animationSpeed: 350,
+  captionsData: 'alt',
+  captionDelay: 150,
+  widthRatio: 0.9,
+});
 
+export function createGallery(images) {
   const markup = images
     .map(
       image => `<li class="gallery-item">
@@ -37,17 +37,8 @@ export function createGallery(images) {
     )
     .join('');
 
-  document.querySelector('ul.gallery').innerHTML += markup;
-
+  document.querySelector('ul.gallery').insertAdjacentHTML('beforeend', markup);
   galleryItemLarge.refresh();
-
-  window.scrollBy({
-    top:
-      2 *
-      document.querySelector('li.gallery-item').getBoundingClientRect().height,
-    left: 0,
-    behavior: 'smooth',
-  });
 }
 
 export function clearGallery() {
