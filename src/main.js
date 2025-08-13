@@ -1,8 +1,12 @@
+// _-_-_-_ import -_-_-__ //
+
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import 'modern-normalize/modern-normalize.css';
 import getImagesByQuery from './js/pixabay-api';
 import * as rendered from './js/render-functions';
+
+// ;:;:;:;   initialize variables    :;:;:;: //
 
 const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
 const searchForm = document.querySelector('form.form');
@@ -13,7 +17,8 @@ let queryText = '';
 let page;
 let loadMoreQueryText;
 
-// initiate search, fixing query value to global var(s)
+//.,.,.,.,.,.,. initiate search, fixing query value to global var(s) .,.,.,.,.,.,.//
+
 searchForm.addEventListener('submit', async e => {
   e.preventDefault();
   queryText = searchForm.elements['search-text'].value.trim();
@@ -36,97 +41,96 @@ searchForm.addEventListener('submit', async e => {
   page = 1;
 
   try {
-    getImagesByQuery(queryText, page).then(queriedImages => {
-      totalPages = Math.ceil(queriedImages.totalHits / perPage);
-      rendered.hideLoader();
-      searchForm.elements['search-text'].value = '';
+    const queriedImages = await getImagesByQuery(queryText, page);
+    totalPages = Math.ceil(queriedImages.totalHits / perPage);
+    searchForm.elements['search-text'].value = '';
 
-      if (queriedImages.hits.length === 0) {
-        return iziToast.error({
-          backgroundColor: '#ef4040',
-          class: 'error-message',
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-          messageColor: '#fff',
-          messageSize: '16px',
-          messageLineHeight: 1.5,
-          position: 'topRight',
-          iconUrl: closeSVGLink,
-        });
-      }
+    if (queriedImages.hits.length === 0) {
+      return iziToast.error({
+        backgroundColor: '#ef4040',
+        class: 'error-message',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
+        messageColor: '#fff',
+        messageSize: '16px',
+        messageLineHeight: 1.5,
+        position: 'topRight',
+        iconUrl: closeSVGLink,
+      });
+    }
 
-      rendered.createGallery(queriedImages.hits);
+    rendered.createGallery(queriedImages.hits);
 
-      if (document.querySelector('ul.gallery').innerHTML && totalPages > 1) {
-        rendered.showLoadMoreButton();
-      } else if (totalPages === 1) {
-        iziToast.error({
-          backgroundColor: '#ef4040',
-          class: 'error-message',
-          message: "We're sorry, but you've reached the end of search results.",
-          messageColor: '#fff',
-          messageSize: '16px',
-          messageLineHeight: 1.5,
-          position: 'bottomRight',
-          iconUrl: closeSVGLink,
-        });
-      }
-    });
+    if (document.querySelector('ul.gallery').innerHTML && totalPages > 1) {
+      rendered.showLoadMoreButton();
+    } else if (totalPages === 1) {
+      iziToast.error({
+        backgroundColor: '#ef4040',
+        class: 'error-message',
+        message: "We're sorry, but you've reached the end of search results.",
+        messageColor: '#fff',
+        messageSize: '16px',
+        messageLineHeight: 1.5,
+        position: 'bottomRight',
+        iconUrl: closeSVGLink,
+      });
+    }
   } catch (error) {
-    rendered.hideLoader();
     iziToast.error({
       backgroundColor: '#380505ff',
       message: `${error}`,
       messageColor: '#fff',
     });
+  } finally {
+    rendered.hideLoader();
   }
 });
 
-//working with Load More button (pages 2 and following);
+//...working with Load More button (pages 2 and following) ... //
+
 loadMoreBtn.addEventListener('click', async () => {
   page++;
   rendered.hideLoadMoreButton();
   rendered.showLoader();
 
   try {
-    getImagesByQuery(loadMoreQueryText, page).then(moreImagesLoaded => {
-      totalPages = Math.ceil(moreImagesLoaded.totalHits / perPage);
-      rendered.hideLoader();
-      rendered.hideLoadMoreButton();
+    const moreImagesLoaded = await getImagesByQuery(loadMoreQueryText, page);
+    totalPages = Math.ceil(moreImagesLoaded.totalHits / perPage);
+    rendered.hideLoader();
 
-      if (totalPages <= page) {
-        queryText = '';
-        totalPages = NaN;
-        iziToast.error({
-          backgroundColor: '#ef4040',
-          class: 'error-message',
-          message: "We're sorry, but you've reached the end of search results.",
-          messageColor: '#fff',
-          messageSize: '16px',
-          messageLineHeight: 1.5,
-          position: 'bottomRight',
-          iconUrl: closeSVGLink,
-        });
-      } else {
-        rendered.showLoadMoreButton();
-      }
-      rendered.createGallery(moreImagesLoaded.hits);
-      window.scrollBy({
-        top:
-          2 *
-          document.querySelector('li.gallery-item').getBoundingClientRect()
-            .height,
-        left: 0,
-        behavior: 'smooth',
+    if (totalPages <= page) {
+      queryText = '';
+      totalPages = NaN;
+      iziToast.error({
+        backgroundColor: '#ef4040',
+        class: 'error-message',
+        message: "We're sorry, but you've reached the end of search results.",
+        messageColor: '#fff',
+        messageSize: '16px',
+        messageLineHeight: 1.5,
+        position: 'bottomRight',
+        iconUrl: closeSVGLink,
       });
+    } else {
+      rendered.showLoadMoreButton();
+    }
+    rendered.createGallery(moreImagesLoaded.hits);
+    window.scrollBy({
+      top:
+        2 *
+        document.querySelector('li.gallery-item').getBoundingClientRect()
+          .height,
+      left: 0,
+      behavior: 'smooth',
     });
   } catch (error) {
-    rendered.hideLoader();
     iziToast.error({
       backgroundColor: '#380505ff',
       message: `${error}`,
       messageColor: '#fff',
     });
+  } finally {
+    rendered.hideLoader();
   }
 });
 
