@@ -12,18 +12,16 @@ const closeSVGLink = new URL('./img/x-octagon.svg', import.meta.url).href;
 const searchForm = document.querySelector('form.form');
 const loadMoreBtn = document.querySelector('button.js-load-more');
 const perPage = 15;
-let totalPages = NaN;
-let queryText = '';
 let page;
-let loadMoreQueryText;
+let totalPages = NaN;
+let queriedText = '';
 
 //.,.,.,.,.,.,. initiate search, fixing query value to global var(s) .,.,.,.,.,.,.//
 
-searchForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  queryText = searchForm.elements['search-text'].value.trim();
-  if (queryText !== '') loadMoreQueryText = queryText.slice();
-  if (queryText === '') {
+searchForm.addEventListener('submit', async ev => {
+  ev.preventDefault();
+
+  if (searchForm.elements['search-text'].value.trim() === '') {
     return iziToast.warning({
       backgroundColor: 'orange',
       message:
@@ -33,6 +31,8 @@ searchForm.addEventListener('submit', async e => {
       messageLineHeight: 1.5,
       position: 'topLeft',
     });
+  } else {
+    queriedText = searchForm.elements['search-text'].value.trim();
   }
 
   rendered.hideLoadMoreButton();
@@ -41,9 +41,8 @@ searchForm.addEventListener('submit', async e => {
   page = 1;
 
   try {
-    const queriedImages = await getImagesByQuery(queryText, page);
+    const queriedImages = await getImagesByQuery(queriedText, page);
     totalPages = Math.ceil(queriedImages.totalHits / perPage);
-    searchForm.elements['search-text'].value = '';
 
     if (queriedImages.hits.length === 0) {
       return iziToast.error({
@@ -61,7 +60,7 @@ searchForm.addEventListener('submit', async e => {
 
     rendered.createGallery(queriedImages.hits);
 
-    if (document.querySelector('ul.gallery').innerHTML && totalPages > 1) {
+    if (totalPages > 1) {
       rendered.showLoadMoreButton();
     } else if (totalPages === 1) {
       iziToast.error({
@@ -83,6 +82,7 @@ searchForm.addEventListener('submit', async e => {
     });
   } finally {
     rendered.hideLoader();
+    searchForm.reset();
   }
 });
 
@@ -94,12 +94,10 @@ loadMoreBtn.addEventListener('click', async () => {
   rendered.showLoader();
 
   try {
-    const moreImagesLoaded = await getImagesByQuery(loadMoreQueryText, page);
-    totalPages = Math.ceil(moreImagesLoaded.totalHits / perPage);
-    rendered.hideLoader();
+    const moreImagesLoaded = await getImagesByQuery(queriedText, page);
 
     if (totalPages <= page) {
-      queryText = '';
+      queriedText = '';
       totalPages = NaN;
       iziToast.error({
         backgroundColor: '#ef4040',
@@ -114,7 +112,8 @@ loadMoreBtn.addEventListener('click', async () => {
     } else {
       rendered.showLoadMoreButton();
     }
-    rendered.createGallery(moreImagesLoaded.hits);
+    if (moreImagesLoaded.hits.length > 0)
+      rendered.createGallery(moreImagesLoaded.hits);
     window.scrollBy({
       top:
         2 *
